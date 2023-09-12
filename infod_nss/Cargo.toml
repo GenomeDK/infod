@@ -1,0 +1,25 @@
+[package]
+name = "infod_nss"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "NSS module for infod."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "nss_infod"
+crate-type = ["cdylib"]
+
+[dependencies]
+eyre = "*"
+color-eyre = "*"
+libc = "0.2"
+lazy_static = "1.4"
+paste = "1.0"
+libnss = "*"
+infod_common = { path = "../infod_common" }
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/lib/libnss_infod.so.2"
+source = "target/release/libnss_infod.so"
+mode = "775"

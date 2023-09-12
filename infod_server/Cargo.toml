@@ -1,0 +1,22 @@
+[package]
+name = "infod_server"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Server for infod."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eyre = "*"
+color-eyre = "*"
+env_logger = "*"
+tracing = "*"
+tracing-subscriber = "*"
+rand = "0.8.5"
+infod_common = { path = "../infod_common" }
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/usr/sbin/infod"
+mode = "770"
+source = "target/release/infod"

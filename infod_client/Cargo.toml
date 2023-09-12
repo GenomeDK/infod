@@ -1,0 +1,24 @@
+[package]
+name = "infod_client"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Client for infod."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+eyre = "*"
+color-eyre = "*"
+env_logger = "*"
+tracing = "*"
+tracing-subscriber = "*"
+infod_common = { path = "../infod_common" }
+backoff = "0.4.0"
+chacha20poly1305 = "0.10.1"
+nix = { version = "0.27.1", features = ["fs"] }
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/usr/sbin/infod_client"
+mode = "775"
+source = "target/release/infod_client"
