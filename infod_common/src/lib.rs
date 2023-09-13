@@ -3,6 +3,7 @@ use chacha20poly1305::{
     KeySizeUser, XChaCha20Poly1305, XNonce,
 };
 use eyre::{Context, Result};
+use libc::mode_t;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha512};
 use std::{
@@ -25,7 +26,7 @@ pub struct Config {
 pub struct FileSpec {
     pub src: PathBuf,
     pub dest: PathBuf,
-    pub mode: u16,
+    pub mode: mode_t,
 }
 
 #[derive(Deserialize)]
