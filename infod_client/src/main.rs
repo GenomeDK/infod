@@ -1,9 +1,5 @@
-use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::BufWriter;
+use std::fs;
 use std::net::ToSocketAddrs;
-use std::os::fd::AsRawFd;
-use std::path::PathBuf;
 use std::{net::TcpStream, thread, time::Duration};
 
 use backoff::{retry, ExponentialBackoffBuilder};
@@ -11,10 +7,9 @@ use chacha20poly1305::XChaCha20Poly1305;
 use color_eyre::eyre::Result;
 use eyre::{eyre, WrapErr};
 use infod_common::{
-    cipher_from_secret_key, read_config, write_groups, write_mounts, write_shadow, write_users,
-    Config, Connection, Mount, State, StateId, DEFAULT_CONFIG_PATH,
+    cipher_from_secret_key, read_config, Config, Connection, State, StateId, DEFAULT_CONFIG_PATH,
 };
-use nix::sys::stat::{fchmod, Mode};
+use nix::sys::stat::{fchmodat, FchmodatFlags, Mode};
 use tracing::{debug, error};
 
 fn main() -> Result<()> {
@@ -66,7 +61,7 @@ fn start_client(cipher: &XChaCha20Poly1305, state_id: &mut StateId, config: &Con
         Some(frame) => match frame {
             infod_common::Frame::NewState(new_state_id, state) => {
                 *state_id = new_state_id;
-                write_state(state, config).wrap_err("Could not write state to disk")?;
+                write_state(state).wrap_err("Could not write state to disk")?;
                 debug!("Client state updated to version {}", state_id);
             }
             infod_common::Frame::NoChanges => (),
@@ -77,64 +72,21 @@ fn start_client(cipher: &XChaCha20Poly1305, state_id: &mut StateId, config: &Con
     Ok(())
 }
 
-fn write_state(state: State, config: &Config) -> Result<()> {
-    let destination = config
-        .client
-        .destination
-        .clone()
-        .unwrap_or_else(|| PathBuf::from("/var/spool/infod"));
+fn write_state(state: State) -> Result<()> {
+    for (file_spec, contents) in state.files.iter() {
+        let tmp_dest = file_spec.dest.with_extension("new");
+        fs::write(&tmp_dest, contents)
+            .wrap_err_with(|| eyre!("Could not write file {:?}", &tmp_dest))?;
 
-    let passwd_path = destination.join("passwd");
-    let passwd_path_tmp = passwd_path.with_extension("new");
+        fchmodat(
+            None,
+            &tmp_dest,
+            Mode::from_bits_truncate(file_spec.mode),
+            FchmodatFlags::FollowSymlink,
+        )?;
 
-    let group_path = destination.join("group");
-    let group_path_tmp = group_path.with_extension("new");
-
-    let shadow_path = destination.join("shadow");
-    let shadow_path_tmp = shadow_path.with_extension("new");
-
-    let _ = std::fs::remove_file(&passwd_path_tmp);
-    let _ = std::fs::remove_file(&group_path_tmp);
-    let _ = std::fs::remove_file(&shadow_path_tmp);
-
-    {
-        let file = File::create(&passwd_path_tmp)?;
-        fchmod(file.as_raw_fd(), Mode::S_IRUSR)?;
-        write_users(&state.users, &mut BufWriter::new(file))?;
-
-        let file = File::create(&shadow_path_tmp)?;
-        fchmod(file.as_raw_fd(), Mode::S_IRUSR)?;
-        write_shadow(&state.shadow, &mut BufWriter::new(file))?;
-
-        let file = File::create(&group_path_tmp)?;
-        fchmod(file.as_raw_fd(), Mode::S_IRUSR)?;
-        write_groups(&state.groups, &mut BufWriter::new(file))?;
+        fs::rename(&tmp_dest, &file_spec.dest)
+            .wrap_err_with(|| eyre!("Could not move to file {:?}", &file_spec.dest))?;
     }
-
-    std::fs::rename(passwd_path_tmp, passwd_path)?;
-    std::fs::rename(group_path_tmp, group_path)?;
-    std::fs::rename(shadow_path_tmp, shadow_path)?;
-
-    let mut mountpoints: BTreeMap<&str, Vec<Mount>> = BTreeMap::new();
-    for mount in state.mounts.iter() {
-        mountpoints
-            .entry(&mount.mountpoint)
-            .or_insert_with(|| Vec::new())
-            .push(mount.clone());
-    }
-
-    for (mountpoint, mounts) in mountpoints.iter() {
-        let path = destination.join(format!(
-            "{}{}",
-            config
-                .client
-                .mountpoint_prefix
-                .clone()
-                .unwrap_or(String::from("")),
-            mountpoint,
-        ));
-        write_mounts(&mounts, &mut BufWriter::new(File::create(path)?))?;
-    }
-
     Ok(())
 }

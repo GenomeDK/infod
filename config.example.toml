@@ -1,26 +1,16 @@
 secret_key = "hejmeddigjeghedderkaj"
 
 [server]
-# Default: /var/spool/infod/passwd
-passwd_file = "test/server/etc/infod_passwd"
-# Default: /var/spool/infod/group
-group_file = "test/server/etc/infod_group"
-# Default: /var/spool/infod/shadow
-shadow_file = "test/server/etc/infod_shadow"
-# Default: /var/spool/infod/mounts
-mount_file = "test/server/etc/infod_mount"
-
-# Default: "0.0.0.0:9797"
 listen_on = "0.0.0.0:9797"
+files = [
+    { src = "/var/spool/infod/passwd", dest = "/var/spool/infod/passwd", mode = 0o644 },
+    { src = "/var/spool/infod/group", dest = "/var/spool/infod/group", mode = 0o644 },
+    { src = "/var/spool/infod/shadow", dest = "/var/spool/infod/shadow", mode = 0o000 },
+    { src = "/var/spool/infod/auto.home", dest = "/var/spool/infod/auto.home", mode = 0o600 },
+
+]
 
 [client]
-# Default: "localhost:9797"
 server = "localhost:9797"
-
 # Default: 1 (seconds)
 update_interval = 3.0
-
-# Default: "auto."
-mountpoint_prefix = "auto."
-# Default: "/var/spool/infod"
-destination = "test/client/var/spool/infod"

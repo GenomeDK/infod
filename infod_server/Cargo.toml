@@ -17,6 +17,6 @@ rand = "0.8.5"
 infod_common = { path = "../infod_common" }
 
 [[package.metadata.generate-rpm.assets]]
-dest = "/usr/sbin/infod"
+dest = "/usr/sbin/infod_server"
 mode = "770"
-source = "target/release/infod"
+source = "target/release/infod_server"

@@ -2,11 +2,10 @@
 extern crate lazy_static;
 
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufRead, BufReader};
 use std::net::IpAddr;
 
 use color_eyre::eyre::Result;
-use infod_common::{read_groups, read_shadow, read_users};
 use libnss::group::{Group, GroupHooks};
 use libnss::host::{AddressFamily, Host, HostHooks};
 use libnss::initgroups::InitgroupsHooks;
@@ -17,6 +16,73 @@ use libnss::{
     libnss_group_hooks, libnss_host_hooks, libnss_initgroups_hooks, libnss_passwd_hooks,
     libnss_shadow_hooks,
 };
+
+pub fn read_users<R>(reader: BufReader<R>) -> Result<Vec<Passwd>>
+where
+    R: std::io::Read,
+{
+    let mut users = Vec::new();
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<_> = line.split(":").collect();
+        users.push(Passwd {
+            name: parts[0].to_string(),
+            passwd: parts[1].to_string(),
+            uid: u32::from_str_radix(&parts[2], 10)?,
+            gid: u32::from_str_radix(&parts[3], 10)?,
+            gecos: parts[4].to_string(),
+            dir: parts[5].to_string(),
+            shell: parts[6].to_string(),
+        })
+    }
+    Ok(users)
+}
+
+pub fn read_shadow<R>(reader: BufReader<R>) -> Result<Vec<Shadow>>
+where
+    R: std::io::Read,
+{
+    let mut entries = Vec::new();
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<_> = line.split(":").collect();
+        entries.push(Shadow {
+            name: parts[0].to_string(),
+            passwd: parts[1].to_string(),
+            last_change: parts[2].parse().unwrap_or(0),
+            change_min_days: parts[3].parse().unwrap_or(0),
+            change_max_days: parts[4].parse().unwrap_or(99999),
+            change_warn_days: parts[5].parse().unwrap_or(7),
+            change_inactive_days: parts[6].parse().unwrap_or(-1),
+            expire_date: parts[7].parse().unwrap_or(-1),
+            reserved: parts[8].parse().unwrap_or(0),
+        })
+    }
+    Ok(entries)
+}
+
+pub fn read_groups<R>(reader: BufReader<R>) -> Result<Vec<Group>>
+where
+    R: std::io::Read,
+{
+    let mut groups = Vec::new();
+    for line in reader.lines() {
+        let line = line?;
+        let parts: Vec<_> = line.split(":").collect();
+        groups.push(Group {
+            name: parts[0].to_string(),
+            passwd: parts[1].to_string(),
+            gid: u32::from_str_radix(&parts[2], 10)?,
+            members: parts[3]
+                .split(",")
+                .collect::<Vec<_>>()
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+        })
+    }
+    Ok(groups)
+}
 
 struct InfodPasswd;
 libnss_passwd_hooks!(infod, InfodPasswd);
@@ -33,20 +99,7 @@ impl PasswdHooks for InfodPasswd {
             Err(_) => return Response::Unavail,
         };
 
-        Response::Success(
-            users
-                .into_iter()
-                .map(|u| Passwd {
-                    name: u.username,
-                    passwd: "x".to_string(),
-                    uid: u.uid,
-                    gid: u.gid,
-                    gecos: u.gecos,
-                    dir: u.home,
-                    shell: u.shell,
-                })
-                .collect(),
-        )
+        Response::Success(users)
     }
 
     fn get_entry_by_uid(uid: libc::uid_t) -> Response<Passwd> {
@@ -85,17 +138,7 @@ impl GroupHooks for InfodGroup {
             Err(_) => return Response::Unavail,
         };
 
-        Response::Success(
-            groups
-                .into_iter()
-                .map(|g| Group {
-                    name: g.name,
-                    passwd: g.password,
-                    gid: g.gid,
-                    members: g.members,
-                })
-                .collect(),
-        )
+        Response::Success(groups)
     }
 
     fn get_entry_by_gid(gid: libc::gid_t) -> Response<Group> {
@@ -127,22 +170,7 @@ impl ShadowHooks for InfodShadow {
         fn op() -> Result<Vec<Shadow>> {
             let file = File::open("/var/spool/infod/shadow")?;
             let shadow = read_shadow(BufReader::new(file))?;
-            Ok(shadow
-                .into_iter()
-                .filter_map(|e| -> Option<Shadow> {
-                    Some(Shadow {
-                        name: e.username,
-                        passwd: e.pwdp,
-                        last_change: e.lstchg.parse().unwrap_or(0),
-                        change_min_days: e.min.parse().unwrap_or(0),
-                        change_max_days: e.max.parse().unwrap_or(99999),
-                        change_warn_days: e.warn.parse().unwrap_or(7),
-                        change_inactive_days: e.inact.parse().unwrap_or(-1),
-                        expire_date: e.expire.parse().unwrap_or(-1),
-                        reserved: 0,
-                    })
-                })
-                .collect())
+            Ok(shadow)
         }
 
         match op() {
