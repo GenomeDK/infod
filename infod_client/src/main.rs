@@ -37,9 +37,7 @@ fn start_client(cipher: &XChaCha20Poly1305, state_id: &mut StateId, config: &Con
         .client
         .server
         .to_socket_addrs()
-        .wrap_err("Could not parse server address")?
-        .filter(|s| s.is_ipv4())
-        .next()
+        .wrap_err("Could not parse server address")?.find(|s| s.is_ipv4())
         .ok_or_else(|| eyre!("Could not find valid server address"))?;
 
     let backoff = ExponentialBackoffBuilder::new()

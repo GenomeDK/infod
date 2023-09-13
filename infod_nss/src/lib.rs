@@ -24,12 +24,12 @@ where
     let mut users = Vec::new();
     for line in reader.lines() {
         let line = line?;
-        let parts: Vec<_> = line.split(":").collect();
+        let parts: Vec<_> = line.split(':').collect();
         users.push(Passwd {
             name: parts[0].to_string(),
             passwd: parts[1].to_string(),
-            uid: u32::from_str_radix(&parts[2], 10)?,
-            gid: u32::from_str_radix(&parts[3], 10)?,
+            uid: parts[2].parse::<u32>()?,
+            gid: parts[3].parse::<u32>()?,
             gecos: parts[4].to_string(),
             dir: parts[5].to_string(),
             shell: parts[6].to_string(),
@@ -45,7 +45,7 @@ where
     let mut entries = Vec::new();
     for line in reader.lines() {
         let line = line?;
-        let parts: Vec<_> = line.split(":").collect();
+        let parts: Vec<_> = line.split(':').collect();
         entries.push(Shadow {
             name: parts[0].to_string(),
             passwd: parts[1].to_string(),
@@ -68,13 +68,13 @@ where
     let mut groups = Vec::new();
     for line in reader.lines() {
         let line = line?;
-        let parts: Vec<_> = line.split(":").collect();
+        let parts: Vec<_> = line.split(':').collect();
         groups.push(Group {
             name: parts[0].to_string(),
             passwd: parts[1].to_string(),
-            gid: u32::from_str_radix(&parts[2], 10)?,
+            gid: parts[2].parse::<u32>()?,
             members: parts[3]
-                .split(",")
+                .split(',')
                 .collect::<Vec<_>>()
                 .iter()
                 .map(|s| s.to_string())

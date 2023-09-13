@@ -5,7 +5,6 @@ use std::net::TcpListener;
 use color_eyre::eyre::Result;
 use eyre::{eyre, WrapErr};
 use infod_common::{cipher_from_secret_key, read_config, Connection, State, DEFAULT_CONFIG_PATH};
-use rand;
 use tracing::info;
 
 fn main() -> Result<()> {

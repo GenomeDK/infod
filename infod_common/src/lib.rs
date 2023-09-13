@@ -108,7 +108,7 @@ impl Connection {
         let mut ciphertext = vec![0u8; length as usize];
         self.reader.read_exact(ciphertext.as_mut_slice())?;
 
-        let data = self.cipher.decrypt(&nonce, ciphertext.as_ref()).unwrap();
+        let data = self.cipher.decrypt(nonce, ciphertext.as_ref()).unwrap();
         let frame = serde_json::from_slice(&data).wrap_err("Deserializing frame")?;
 
         Ok(Some(frame))
@@ -140,6 +140,6 @@ where
     P: AsRef<Path>,
 {
     let mut buf = [0u8; 32];
-    let _ = File::open(path)?.read_exact(&mut buf)?;
+    File::open(path)?.read_exact(&mut buf)?;
     Ok(buf)
 }
