@@ -17,7 +17,7 @@ use libnss::{
     libnss_shadow_hooks,
 };
 
-pub fn read_users<R>(reader: BufReader<R>) -> Result<Vec<Passwd>>
+pub fn read_passwd<R>(reader: BufReader<R>) -> Result<Vec<Passwd>>
 where
     R: std::io::Read,
 {
@@ -28,8 +28,8 @@ where
         users.push(Passwd {
             name: parts[0].to_string(),
             passwd: parts[1].to_string(),
-            uid: parts[2].parse::<u32>()?,
-            gid: parts[3].parse::<u32>()?,
+            uid: parts[2].parse()?,
+            gid: parts[3].parse()?,
             gecos: parts[4].to_string(),
             dir: parts[5].to_string(),
             shell: parts[6].to_string(),
@@ -61,7 +61,7 @@ where
     Ok(entries)
 }
 
-pub fn read_groups<R>(reader: BufReader<R>) -> Result<Vec<Group>>
+pub fn read_group<R>(reader: BufReader<R>) -> Result<Vec<Group>>
 where
     R: std::io::Read,
 {
@@ -72,7 +72,7 @@ where
         groups.push(Group {
             name: parts[0].to_string(),
             passwd: parts[1].to_string(),
-            gid: parts[2].parse::<u32>()?,
+            gid: parts[2].parse()?,
             members: parts[3]
                 .split(',')
                 .collect::<Vec<_>>()
@@ -94,7 +94,7 @@ impl PasswdHooks for InfodPasswd {
             Err(_) => return Response::Unavail,
         };
 
-        let users = match read_users(BufReader::new(file)) {
+        let users = match read_passwd(BufReader::new(file)) {
             Ok(users) => users,
             Err(_) => return Response::Unavail,
         };
@@ -133,7 +133,7 @@ impl GroupHooks for InfodGroup {
             Err(_) => return Response::Unavail,
         };
 
-        let groups = match read_groups(BufReader::new(file)) {
+        let groups = match read_group(BufReader::new(file)) {
             Ok(groups) => groups,
             Err(_) => return Response::Unavail,
         };
