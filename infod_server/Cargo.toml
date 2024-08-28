@@ -16,7 +16,7 @@ tracing-subscriber = "*"
 rand = "0.8.5"
 infod_common = { path = "../infod_common" }
 
-[[package.metadata.generate-rpm]]
+[package.metadata.generate-rpm]
 require-sh = false
 
 [[package.metadata.generate-rpm.assets]]

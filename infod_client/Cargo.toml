@@ -18,7 +18,7 @@ backoff = "0.4.0"
 chacha20poly1305 = "0.10.1"
 nix = { version = "0.27.1", features = ["fs"] }
 
-[[package.metadata.generate-rpm]]
+[package.metadata.generate-rpm]
 require-sh = false
 
 [[package.metadata.generate-rpm.assets]]
