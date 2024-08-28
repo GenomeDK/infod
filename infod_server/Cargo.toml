@@ -16,7 +16,22 @@ tracing-subscriber = "*"
 rand = "0.8.5"
 infod_common = { path = "../infod_common" }
 
+[[package.metadata.generate-rpm]]
+require-sh = false
+
 [[package.metadata.generate-rpm.assets]]
 dest = "/usr/sbin/infod_server"
-mode = "770"
+mode = "555"
 source = "target/release/infod_server"
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/etc/systemd/system/infod-server.service"
+mode = "600"
+source = "infod-server.example.service"
+config = true
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/etc/infod/config.example.toml"
+mode = "600"
+source = "config.example.toml"
+config = true

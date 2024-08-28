@@ -18,7 +18,22 @@ backoff = "0.4.0"
 chacha20poly1305 = "0.10.1"
 nix = { version = "0.27.1", features = ["fs"] }
 
+[[package.metadata.generate-rpm]]
+require-sh = false
+
 [[package.metadata.generate-rpm.assets]]
 dest = "/usr/sbin/infod_client"
-mode = "775"
+mode = "555"
 source = "target/release/infod_client"
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/etc/systemd/system/infod-client.service"
+mode = "600"
+source = "infod-client.example.service"
+config = true
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/etc/infod/config.example.toml"
+mode = "600"
+source = "config..example.toml"
+config = true

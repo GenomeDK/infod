@@ -19,7 +19,10 @@ paste = "1.0"
 libnss = "*"
 infod_common = { path = "../infod_common" }
 
+[[package.metadata.generate-rpm]]
+require-sh = false
+
 [[package.metadata.generate-rpm.assets]]
-dest = "/lib/libnss_infod.so.2"
+dest = "/usr/lib/libnss_infod.so.2"
 source = "target/release/libnss_infod.so"
-mode = "775"
+mode = "555"

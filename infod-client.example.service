@@ -1,0 +1,9 @@
+[Unit]
+Description=Run infod client
+
+[Service]
+ExecStart=/usr/sbin/infod_client
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
