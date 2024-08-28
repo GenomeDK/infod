@@ -35,5 +35,5 @@ config = true
 [[package.metadata.generate-rpm.assets]]
 dest = "/etc/infod/config.example.toml"
 mode = "600"
-source = "config..example.toml"
+source = "config.example.toml"
 config = true
