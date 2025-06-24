@@ -1,8 +1,9 @@
 [package]
-name = "infod_common"
+name = "infoctl"
 version = "0.1.1"
 edition = "2021"
 license = "MIT"
+description = "Controller for infod."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,9 +13,14 @@ color-eyre = "*"
 env_logger = "*"
 tracing = "*"
 tracing-subscriber = "*"
+infod_common = { path = "../infod_common" }
+backoff = "0.4.0"
 chacha20poly1305 = "0.10.1"
-serde = { version = "*", features = ["derive"] }
-serde_json = "1.0.105"
-toml = "0.7.7"
-sha2 = "0.10.7"
-libc = "0.2.148"
+
+[package.metadata.generate-rpm]
+require-sh = false
+
+[[package.metadata.generate-rpm.assets]]
+dest = "/usr/sbin/infoctl"
+mode = "555"
+source = "target/release/infoctl"

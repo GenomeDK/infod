@@ -4,8 +4,19 @@ use std::net::TcpListener;
 
 use color_eyre::eyre::Result;
 use eyre::{eyre, WrapErr};
-use infod_common::{cipher_from_secret_key, read_config, Connection, State, DEFAULT_CONFIG_PATH};
+use infod_common::{cipher_from_secret_key, read_config, Connection, FileSpec, State, DEFAULT_CONFIG_PATH};
 use tracing::info;
+
+fn load_states(file_specs: &Vec<FileSpec>) -> Result<State>
+{
+    let mut files = Vec::new();
+    for file_spec in file_specs.iter() {
+        let contents = fs::read(&file_spec.src)?;
+        files.push((file_spec.clone(), contents));
+    }
+
+    Ok(State { files })
+}
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -22,8 +33,8 @@ fn main() -> Result<()> {
         files.push((file_spec.clone(), contents));
     }
 
-    let state = State { files };
-    let id: u64 = rand::random();
+    let mut state = load_states(&config.server.files)?;
+    let mut id: u64 = rand::random();
 
     let listener = TcpListener::bind(
         config
@@ -46,6 +57,18 @@ fn main() -> Result<()> {
                 infod_common::Frame::CheckState(cid) if cid == id => infod_common::Frame::NoChanges,
                 infod_common::Frame::CheckState(_) => {
                     infod_common::Frame::NewState(id, state.clone())
+                }
+                infod_common::Frame::RequestStateReload => {
+                    let new_state = load_states(&config.server.files)?;
+                    if state == new_state {
+                        info!("Reloaded with no new state");
+                        infod_common::Frame::NoChanges
+                    } else {
+                        info!("Reload with new state");
+                        state = new_state;
+                        id = rand::random();
+                        infod_common::Frame::NewState(id, state.clone())
+                    }
                 }
                 infod_common::Frame::NewState(_, _) => panic!("Invalid frame received: NewState"),
                 infod_common::Frame::NoChanges => panic!("Invalid frame received: NoChanges"),

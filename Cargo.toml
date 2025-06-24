@@ -1,5 +1,5 @@
 [workspace]
-members = ["infod_*"]
+members = ["infod_common", "infod_client", "infod_server", "infod_nss", "infoctl"]
 resolver = "2"
 
 [profile.release]

@@ -22,7 +22,7 @@ pub struct Config {
     pub client: ClientConfig,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
 pub struct FileSpec {
     pub src: PathBuf,
     pub dest: PathBuf,
@@ -61,7 +61,7 @@ pub fn cipher_from_secret_key(secret_key: &String) -> XChaCha20Poly1305 {
 
 pub type StateId = u64;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
 pub struct State {
     pub files: Vec<(FileSpec, Vec<u8>)>,
 }
@@ -71,6 +71,7 @@ pub enum Frame {
     CheckState(StateId),
     NewState(StateId, State),
     NoChanges,
+    RequestStateReload,
 }
 
 pub struct Connection {

@@ -37,7 +37,7 @@ The binary assets will be located in `target/release/{infod_server,infod_client,
 You can install `infod` manually:
 
 ```bash
-$ install -m 555 target/release/{infod_server,infod_client} /usr/bin/
+$ install -m 555 target/release/{infod_server,infod_client,infoctl} /usr/bin/
 $ install -m 555 target/release/libnss_infod.o.2 /usr/lib/libnss_infod.so.2
 $ install -m 600 -d config.example.toml /etc/infod/config.toml
 $ install -m 600 -d infod-server.example.service /etc/systemd/system/infod-server.service
@@ -50,6 +50,7 @@ Or build RPMs:
 $ cargo generate-rpm -p infod_server
 $ cargo generate-rpm -p infod_client
 $ cargo generate-rpm -p infod_nss
+$ cargo generate-rpm -p infoctl
 ```
 
 The RPMs will be available in `target/generate-rpm/` and are compatible with

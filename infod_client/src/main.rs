@@ -64,6 +64,7 @@ fn start_client(cipher: &XChaCha20Poly1305, state_id: &mut StateId, config: &Con
             }
             infod_common::Frame::NoChanges => (),
             infod_common::Frame::CheckState(_) => panic!("Invalid frame: CheckState"),
+            infod_common::Frame::RequestStateReload => panic!("Invalid frame: RequestStateReload"),
         },
     };
 
