@@ -62,6 +62,9 @@ CentOS 7, use the `--payload-compress none` option when generating the RPMs.
 
 ## Configuration
 
+By default `infod` will load its configuration from `/etc/infod/infod.toml`. You can
+change this by setting the `INFOD_CONFIG` environment variable.
+
 The configuration looks like this:
 
 ```toml
