@@ -57,6 +57,9 @@ The RPMs will be available in `target/generate-rpm/` and are compatible with
 RedHat-derivatives version 8 or newer. If you need packages compatible with e.g.
 CentOS 7, use the `--payload-compress none` option when generating the RPMs.
 
+> [!NOTE]
+> On RedHat-derived distros, use `authselect/minimal` to avoid issues.
+
 ## Configuration
 
 The configuration looks like this:
